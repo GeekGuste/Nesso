@@ -1,0 +1,88 @@
+<form class="container py-4" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <!-- Titre -->
+    <div class="d-flex align-items-center mb-4">
+        <h1 class="h3 mb-0 me-3">Recherche de recettes</h1>
+        <span class="text-body-secondary">Ajoutez des ingrédients et lancez la recherche</span>
+    </div>
+
+    <!-- Carte de saisie -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="ingredient">Ingrédient</label>
+                    <div class="input-group">
+                        <input id="ingredient" class="form-control" placeholder="ex: tomate"
+                            formControlName="ingredientInput" (keyup.enter)="addIngredient()">
+                        <button type="button" class="btn btn-outline-primary" (click)="addIngredient()">Ajouter</button>
+                    </div>
+                    <div class="form-text">
+                        Appuyez sur Entrée ou cliquez sur Ajouter.
+                        <span *ngIf="ingredientInput.touched && ingredientInput.invalid" class="text-danger ms-2">
+                            (2 caractères minimum)
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-md-6 text-md-end">
+                    <button type="submit" class="btn btn-primary px-4" [disabled]="loading()">
+                        @if (!loading()) {
+                        <span>Rechercher</span>
+                        }
+                        @else {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Recherche…
+                        }
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chips -->
+            @if(ingredientsArray.length){
+            <div class="mt-3">
+                <div class="d-flex flex-wrap gap-2">
+                    <span *ngFor="let c of ingredientsArray.controls; index as i"
+                        class="badge rounded-pill text-bg-light border">
+                        {{ c.value }}
+                        <button type="button" class="btn-close btn-close-white ms-2" aria-label="Supprimer"
+                            (click)="removeIngredient(i)"></button>
+                    </span>
+                </div>
+            </div>
+            }
+
+            <!-- Erreur -->
+            <div *ngIf="errorMsg()" class="alert alert-danger mt-3 mb-0" role="alert">
+                {{ errorMsg() }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Résultats -->
+    <div class="mt-4" *ngIf="results().length">
+        <h2 class="h5 mb-3">Résultats ({{ results().length }})</h2>
+
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-4" *ngFor="let r of results()">
+                <div class="card h-100 recipe-card border-0 shadow-sm">
+                    @if(r.imageUrl){
+                        <img [src]="r.imageUrl" class="card-img-top" alt="photo recette" />
+                    }
+                    <div class="card-body">
+                        <h3 class="h6 card-title mb-2">{{ r.recipeName }}</h3>
+                        <p class="card-text small text-body-secondary mb-2">
+                            <strong>Ingrédients:</strong> {{ r.ingredients.join(', ') }}
+                        </p>
+                        <markdown class="markdown-body small" [data]="r.preparation"></markdown>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Etat vide -->
+    <div class="text-center text-body-secondary mt-4" *ngIf="!results().length && !loading() && !errorMsg()">
+        <i class="bi bi-search fs-3 d-block mb-2"></i>
+        Entrez un ou plusieurs ingrédients puis cliquez sur Rechercher.
+    </div>
+</form>
