@@ -41,12 +41,13 @@
             @if(ingredientsArray.length){
             <div class="mt-3">
                 <div class="d-flex flex-wrap gap-2">
-                    <span *ngFor="let c of ingredientsArray.controls; index as i"
-                        class="badge rounded-pill text-bg-light border">
-                        {{ c.value }}
-                        <button type="button" class="btn-close btn-close-white ms-2" aria-label="Supprimer"
-                            (click)="removeIngredient(i)"></button>
-                    </span>
+                    @for (c of ingredientsArray.controls; track $index) {
+                        <span class="badge rounded-pill text-bg-light border">
+                            {{ c.value }}
+                            <button type="button" class="btn-close btn-close-white ms-2" aria-label="Supprimer"
+                                (click)="removeIngredient($index)"></button>
+                        </span>
+                    }
                 </div>
             </div>
             }
@@ -66,7 +67,7 @@
             <div class="col-md-6 col-lg-4" *ngFor="let r of results()">
                 <div class="card h-100 recipe-card border-0 shadow-sm">
                     @if(r.imageUrl){
-                        <img [src]="r.imageUrl" class="card-img-top" alt="photo recette" />
+                    <img [src]="r.imageUrl" class="card-img-top" alt="photo recette" />
                     }
                     <div class="card-body">
                         <h3 class="h6 card-title mb-2">{{ r.recipeName }}</h3>
@@ -81,8 +82,10 @@
     </div>
 
     <!-- Etat vide -->
-    <div class="text-center text-body-secondary mt-4" *ngIf="!results().length && !loading() && !errorMsg()">
+    @if (!results().length && !loading() && !errorMsg()) {
+    <div class="text-center text-body-secondary mt-4">
         <i class="bi bi-search fs-3 d-block mb-2"></i>
         Entrez un ou plusieurs ingrédients puis cliquez sur Rechercher.
     </div>
+    }
 </form>
