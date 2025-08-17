@@ -31,6 +31,13 @@ export class RecipeSearchComponent {
   get ingredientInput() { return this.form.controls.ingredientInput; }
   get ingredientsArray(): FormArray<FormControl<string>> { return this.form.controls.ingredients; }
 
+  addIngredientByKeyword(event: Event): boolean {
+    event.preventDefault();
+    event.stopPropagation();
+    this.addIngredient();
+    return false; // Prevent default form submission
+  }
+
   addIngredient(): void {
     const raw = this.ingredientInput.value.trim().toLowerCase();
     if (!raw || this.ingredientInput.invalid) return;
