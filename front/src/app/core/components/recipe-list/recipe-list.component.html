@@ -1,0 +1,24 @@
+@if(recipes.length) {
+<div class="mt-4">
+    <h2 class="h5 mb-3">Résultats ({{ recipes.length }})</h2>
+
+    <div class="row g-3">
+        @for (r of recipes; track $index) {
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 recipe-card border-0 shadow-sm">
+                @if(r.imageUrl){
+                <img [src]="r.imageUrl" class="card-img-top" alt="photo recette" />
+                }
+                <div class="card-body">
+                    <h3 class="h6 card-title mb-2">{{ r.recipeName }}</h3>
+                    <p class="card-text small text-body-secondary mb-2">
+                        <strong>Ingrédients : </strong> {{ r.ingredients.join(', ') }}
+                    </p>
+                    <markdown class="markdown-body small" [data]="r.preparation"></markdown>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+</div>
+}

@@ -5,11 +5,12 @@ import { Recipe } from '../../core/model/recipe';
 import { CommonModule } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MarkdownModule } from 'ngx-markdown';
+import { RecipeListComponent } from "src/app/core/components/recipe-list/recipe-list.component";
 
 @Component({
   selector: 'app-recipe-search',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbModule, MarkdownModule],
+  imports: [CommonModule, ReactiveFormsModule, NgbModule, MarkdownModule, RecipeListComponent],
   templateUrl: './recipe-search.component.html',
   styleUrl: './recipe-search.component.scss'
 })
@@ -26,7 +27,7 @@ export class RecipeSearchComponent {
   // --- UI state
   loading = signal(false);
   errorMsg = signal<string | null>(null);
-  results = signal<Recipe[]>([]);
+  recipes = signal<Recipe[]>([]);
 
   get ingredientInput() { return this.form.controls.ingredientInput; }
   get ingredientsArray(): FormArray<FormControl<string>> { return this.form.controls.ingredients; }
@@ -54,7 +55,7 @@ export class RecipeSearchComponent {
 
   onSubmit(): void {
     this.errorMsg.set(null);
-    this.results.set([]);
+    this.recipes.set([]);
 
     const ingredients = this.ingredientsArray.controls.map(c => c.value);
     if (ingredients.length === 0) {
@@ -64,7 +65,7 @@ export class RecipeSearchComponent {
 
     this.loading.set(true);
     this.api.searchRecipes(ingredients).subscribe({
-      next: items => { this.results.set(items); this.loading.set(false); },
+      next: items => { this.recipes.set(items); this.loading.set(false); },
       error: err => {
         this.loading.set(false);
         this.errorMsg.set(err?.error?.detail ?? 'Erreur lors de la recherche.');
