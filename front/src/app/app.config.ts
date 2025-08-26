@@ -6,6 +6,7 @@ import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { environment } from '../environment/environment';
 import { API_BASE_URL } from './api/nesso-client-service';
+import { LOCALE_ID } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,6 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(), 
     provideRouter(routes),
     importProvidersFrom(MarkdownModule.forRoot()),
-    { provide: API_BASE_URL, useValue: environment.apiBaseUrl }
+    { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
+    { provide: LOCALE_ID, useValue: 'fr-FR' }
   ]
 };

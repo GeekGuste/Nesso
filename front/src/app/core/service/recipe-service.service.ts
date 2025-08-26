@@ -1,15 +1,14 @@
-import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Recipe } from '../model/recipe';
 import { catchError, map, Observable, of } from 'rxjs';
-import { Client, GetRecipeInput } from 'src/app/api/nesso-client-service';
+import { Client, GetRecipeInput, GetRecipePlanningInput, GetRecipePlanningOutput, PlaningClient } from 'src/app/api/nesso-client-service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RecipeService {
-  private http = inject(HttpClient);
   private api = inject(Client);
+  private planningApi = inject(PlaningClient);
 
   searchRecipes(ingredients: string[]): Observable<Recipe[]> {
     return this.api.post({ingredients: ingredients} as GetRecipeInput).pipe(
@@ -23,6 +22,14 @@ export class RecipeService {
       catchError(error => {
         console.error('Error fetching recipes:', error);
         return of([]); // Return an empty array on error
+      })
+    );
+  }
+
+  getPlanning(planingInput: GetRecipePlanningInput): Observable<GetRecipePlanningOutput> {
+    return this.planningApi.post(planingInput).pipe(
+      catchError(error => {
+        return of(error);
       })
     );
   }

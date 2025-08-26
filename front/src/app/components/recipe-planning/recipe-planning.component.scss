@@ -1,0 +1,17 @@
+.card { border-radius: 1rem; }
+
+/* look "range" sur le datepicker */
+.custom-day {
+  display: inline-block;
+  width: 2rem; height: 2rem;
+  line-height: 2rem; text-align: center;
+  border-radius: .25rem;
+}
+.custom-day.focused { background-color: rgba(0,0,0,.05); }
+.custom-day.range, .custom-day:hover { background-color: var(--bs-primary); color: #fff; }
+.custom-day.faded { background-color: rgba(13,110,253,.25); color: #fff; }
+
+/* chips */
+.badge.d-inline-flex { padding-inline: .6rem; }
+.badge .btn-close { width: .6rem; height: .6rem; opacity: .75; }
+.badge .btn-close:hover { opacity: 1; }

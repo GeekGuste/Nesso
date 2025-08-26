@@ -15,7 +15,7 @@ import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angula
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class Client {
     private http: HttpClient;
@@ -144,6 +144,138 @@ export class Client {
     }
 }
 
+@Injectable({
+  providedIn: 'root'
+})
+export class PlaningClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Get Recipes Planning
+     * @return Successful Response
+     */
+    post(body: GetRecipePlanningInput): Observable<GetRecipePlanningOutput> {
+        let url_ = this.baseUrl + "/get-recipe-planing";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processPost(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processPost(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetRecipePlanningOutput>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetRecipePlanningOutput>;
+        }));
+    }
+
+    protected processPost(response: HttpResponseBase): Observable<GetRecipePlanningOutput> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = GetRecipePlanningOutput.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status === 422) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            let result422: any = null;
+            let resultData422 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result422 = HTTPValidationError.fromJS(resultData422);
+            return throwException("Validation Error", status, _responseText, _headers, result422);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<GetRecipePlanningOutput>(null as any);
+    }
+}
+
+export class FoodPlanning implements IFoodPlanning {
+    periodeRepas?: string;
+    recipe!: Recipe;
+
+    [key: string]: any;
+
+    constructor(data?: IFoodPlanning) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.recipe = new Recipe();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.periodeRepas = _data["periodeRepas"];
+            this.recipe = _data["recipe"] ? Recipe.fromJS(_data["recipe"]) : new Recipe();
+        }
+    }
+
+    static fromJS(data: any): FoodPlanning {
+        data = typeof data === 'object' ? data : {};
+        let result = new FoodPlanning();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["periodeRepas"] = this.periodeRepas;
+        data["recipe"] = this.recipe ? this.recipe.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IFoodPlanning {
+    periodeRepas?: string;
+    recipe: Recipe;
+
+    [key: string]: any;
+}
+
 export class GetRecipeInput implements IGetRecipeInput {
     ingredients!: string[];
 
@@ -259,6 +391,126 @@ export interface IGetRecipeOutput {
     [key: string]: any;
 }
 
+export class GetRecipePlanningInput implements IGetRecipePlanningInput {
+    givendates?: string;
+    perioderepas?: string;
+    allergies?: string;
+    wishedingredients?: string;
+    city?: string;
+
+    [key: string]: any;
+
+    constructor(data?: IGetRecipePlanningInput) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.givendates = _data["givendates"];
+            this.perioderepas = _data["perioderepas"];
+            this.allergies = _data["allergies"];
+            this.wishedingredients = _data["wishedingredients"];
+            this.city = _data["city"];
+        }
+    }
+
+    static fromJS(data: any): GetRecipePlanningInput {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetRecipePlanningInput();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["givendates"] = this.givendates;
+        data["perioderepas"] = this.perioderepas;
+        data["allergies"] = this.allergies;
+        data["wishedingredients"] = this.wishedingredients;
+        data["city"] = this.city;
+        return data;
+    }
+}
+
+export interface IGetRecipePlanningInput {
+    givendates?: string;
+    perioderepas?: string;
+    allergies?: string;
+    wishedingredients?: string;
+    city?: string;
+
+    [key: string]: any;
+}
+
+export class GetRecipePlanningOutput implements IGetRecipePlanningOutput {
+    planning?: PlanningOfDay[];
+
+    [key: string]: any;
+
+    constructor(data?: IGetRecipePlanningOutput) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["planning"])) {
+                this.planning = [] as any;
+                for (let item of _data["planning"])
+                    this.planning!.push(PlanningOfDay.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): GetRecipePlanningOutput {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetRecipePlanningOutput();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.planning)) {
+            data["planning"] = [];
+            for (let item of this.planning)
+                data["planning"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IGetRecipePlanningOutput {
+    planning?: PlanningOfDay[];
+
+    [key: string]: any;
+}
+
 export class HTTPValidationError implements IHTTPValidationError {
     detail?: ValidationError[];
 
@@ -311,6 +563,66 @@ export class HTTPValidationError implements IHTTPValidationError {
 
 export interface IHTTPValidationError {
     detail?: ValidationError[];
+
+    [key: string]: any;
+}
+
+export class PlanningOfDay implements IPlanningOfDay {
+    day!: string;
+    foods?: FoodPlanning[];
+
+    [key: string]: any;
+
+    constructor(data?: IPlanningOfDay) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.day = _data["day"];
+            if (Array.isArray(_data["foods"])) {
+                this.foods = [] as any;
+                for (let item of _data["foods"])
+                    this.foods!.push(FoodPlanning.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): PlanningOfDay {
+        data = typeof data === 'object' ? data : {};
+        let result = new PlanningOfDay();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["day"] = this.day;
+        if (Array.isArray(this.foods)) {
+            data["foods"] = [];
+            for (let item of this.foods)
+                data["foods"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IPlanningOfDay {
+    day: string;
+    foods?: FoodPlanning[];
 
     [key: string]: any;
 }

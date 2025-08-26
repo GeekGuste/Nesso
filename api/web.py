@@ -25,4 +25,4 @@ def get_recipes(input: GetRecipeInput):
 
 @app.post("/get-recipe-planing", response_model=GetRecipePlanningOutput)
 def get_recipes_planning(input: GetRecipePlanningInput):
-    return GetRecipeService.GetRecipeFromIngredients(input.ingredients)
+    return GetRecipeService.GetRecipePlanning(input)

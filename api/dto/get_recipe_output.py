@@ -9,11 +9,10 @@ class GetRecipePlanningInput(BaseModel):
     perioderepas: str = Field(default_factory=str)
     allergies: str = Field(default_factory=str)
     wishedingredients: str = Field(default_factory=str)
-    givenDates: str = Field(default_factory=str)
     city: str = Field(default_factory=str)
 
 class FoodPlanning(BaseModel):
-    periodeRepas: Field(default_factory=str)
+    periodeRepas: str = Field(default_factory=str)
     recipe: Recipe
 
 class PlanningOfDay(BaseModel):

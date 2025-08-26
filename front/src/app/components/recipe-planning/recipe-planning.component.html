@@ -1,6 +1,158 @@
-<div class="text-center">
-    <h1>A suivre ....</h1>
-    <div>
-        <img src="images/to-be-continued.gif" alt="To be continued" class="img-thumbnail" />
+<div class="container py-4" [formGroup]="form">
+    <div class="d-flex align-items-center mb-4">
+        <h1 class="h4 mb-0 me-3">Générer un planning</h1>
+        <span class="text-body-secondary">Dates & périodes obligatoires, le reste est optionnel</span>
     </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="row g-4">
+                <!-- Colonne gauche : Date range -->
+                <div class="col-lg-6">
+                    <label class="form-label fw-semibold d-block mb-2">Plage de dates <span
+                            class="text-danger">*</span></label>
+
+                    <ng-template #t let-date let-focused="focused">
+                        <span class="custom-day" [class.focused]="focused" [class.range]="isRange(date)"
+                            [class.faded]="isInside(date) || isHovered(date)" (mouseenter)="hoveredDate = date"
+                            (mouseleave)="hoveredDate = null">{{ date.day }}</span>
+                    </ng-template>
+
+                    <ngb-datepicker [dayTemplate]="t" outsideDays="hidden" [displayMonths]="2" [navigation]="'select'"
+                        (dateSelect)="onDateSelection($event)" class="w-100">
+                    </ngb-datepicker>
+
+                    <div class="small mt-2">
+                        <span class="me-3">Du : <strong>{{ form.value.dateRange?.from?.day || '—' }}/{{
+                                form.value.dateRange?.from?.month || '—' }}/{{ form.value.dateRange?.from?.year || '—'
+                                }}</strong></span>
+                        <span>Au : <strong>{{ form.value.dateRange?.to?.day || '—' }}/{{ form.value.dateRange?.to?.month
+                                || '—' }}/{{ form.value.dateRange?.to?.year || '—' }}</strong></span>
+                    </div>
+
+                    <div class="text-danger mt-1"
+                        *ngIf="(fDateFrom.touched && fDateFrom.invalid) || (fDateTo.touched && fDateTo.invalid)">
+                        Veuillez sélectionner une plage de dates.
+                    </div>
+                </div>
+
+                <!-- Colonne droite -->
+                <div class="col-lg-6">
+                    <!-- Périodes -->
+                    <div class="mb-3" [formGroup]="fPeriods">
+                        <label class="form-label fw-semibold">Périodes <span class="text-danger">*</span></label>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <div class="form-check">
+                                <input id="p-matin" class="form-check-input" type="checkbox" formControlName="morning">
+                                <label for="p-matin" class="form-check-label">Matin</label>
+                            </div>
+                            <div class="form-check">
+                                <input id="p-midi" class="form-check-input" type="checkbox" formControlName="noon">
+                                <label for="p-midi" class="form-check-label">Midi</label>
+                            </div>
+                            <div class="form-check">
+                                <input id="p-soir" class="form-check-input" type="checkbox" formControlName="evening">
+                                <label for="p-soir" class="form-check-label">Soir</label>
+                            </div>
+                        </div>
+                        @if(fPeriods.touched && fPeriods.invalid){
+                        <div class="text-danger mt-1">
+                            Veuillez sélectionner au moins une période.
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Ingrédients voulus -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Ingrédients voulus (optionnel)</label>
+                        <div class="input-group">
+                            <input id="ing" type="text" class="form-control" placeholder="ex : tomate"
+                                formControlName="ingredientInput" (keydown.enter)="onIngredientEnter($event)">
+                            <button type="button" class="btn btn-outline-primary"
+                                (click)="addIncludeIngredient()">Ajouter</button>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span
+                                class="badge rounded-pill bg-body-secondary text-dark d-inline-flex align-items-center gap-1"
+                                *ngFor="let c of includeIngredients.controls; index as i">
+                                <i class="bi bi-tag"></i>{{ c.value }}
+                                <button type="button" class="btn-close ms-1" aria-label="Supprimer"
+                                    (click)="removeIncludeIngredient(i)"></button>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Allergies (exclusions) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Allergies (exclure, optionnel)</label>
+                        <div class="input-group">
+                            <input id="alg" type="text" class="form-control" placeholder="ex : gluten, lactose…"
+                                formControlName="allergyInput" (keydown.enter)="onAllergyEnter($event)">
+                            <button type="button" class="btn btn-outline-secondary"
+                                (click)="addAllergy()">Ajouter</button>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span class="badge rounded-pill text-bg-danger d-inline-flex align-items-center gap-1"
+                                *ngFor="let c of allergies.controls; index as i">
+                                <i class="bi bi-exclamation-octagon"></i>{{ c.value }}
+                                <button type="button" class="btn-close btn-close-white ms-1" aria-label="Supprimer"
+                                    (click)="removeAllergy(i)"></button>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Origine -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="origin">Ville / Région / Pays (optionnel)</label>
+                        <input id="origin" type="text" class="form-control" formControlName="origin"
+                            placeholder="ex : Dakar, Sénégal / Paris, France">
+                    </div>
+
+                    <button class="btn btn-primary" type="button" [disabled]="form.invalid || loading()"
+                        (click)="onSubmit()">
+                        <span *ngIf="!loading(); else sp">Rechercher</span>
+                        <ng-template #sp><span
+                                class="spinner-border spinner-border-sm me-2"></span>Recherche…</ng-template>
+                    </button>
+
+                    <div class="text-danger mt-2" *ngIf="errorMsg()">{{ errorMsg() }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (output?.planning?.length) {
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Jour</th>
+                <th scope="col">Période/Recette</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (dayPlaning of output?.planning; track $index) {
+            <tr>
+                <th>{{ dayPlaning.day | date:'EEEE dd/MM/yyyy':'':'fr-FR' }}</th>
+                <td>
+                    <div class="row">
+                        @for (food of dayPlaning.foods; track $index) {
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 recipe-card border-0 shadow-sm">
+                                <h3 class="text-center fw-bold">{{ food.periodeRepas }}</h3>
+                                <div class="card-body">
+                                    <h3 class="h6 card-title mb-2">{{ food.recipe.recipeName }}</h3>
+                                    <p class="card-text small text-body-secondary mb-2">
+                                        <strong>Ingrédients : </strong> {{ food.recipe.ingredients.join(', ') }}
+                                    </p>
+                                    <markdown class="markdown-body small" [data]="food.recipe.preparation"></markdown>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    </div>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+    }
 </div>
