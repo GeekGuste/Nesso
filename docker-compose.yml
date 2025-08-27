@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  api:
+    build: ./api
+    container_name: api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+    env_file:
+      - ./api/.env  # si tu en as un
+    command: uvicorn web:app --host 0.0.0.0 --port 8000 --reload
+    networks: [stack]
+
+  front:
+    build:
+      context: ./front
+      target: dev
+    container_name: front
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./front:/usr/src/app
+      - node_modules:/usr/src/app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true  # pour hot-reload stable dans Docker
+    depends_on:
+      - api
+    command: npm run start
+    networks: [stack]
+
+networks:
+  stack:
+
+volumes:
+  node_modules:
